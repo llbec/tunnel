@@ -3,8 +3,6 @@ package tbrurl
 import (
 	"io/ioutil"
 	"net/http"
-
-	"github.com/PuerkitoBio/goquery"
 )
 
 //Get public func, return target url
@@ -20,12 +18,7 @@ func Get(name string) (string, error) {
 		return "", err
 	}
 
-	// Load the HTML document
-	doc, err := goquery.NewDocumentFromReader(body)
-	if err != nil {
-		return "", err
-	}
-	return string(body)
+	return string(body), nil
 }
 
 //private
