@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/buger/jsonparser"
 	"github.com/tunnel/tbrurl"
 )
 
@@ -16,5 +17,8 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Print(s)
+	//fmt.Print(s)
+	jsonparser.ArrayEach([]byte(s), func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+		fmt.Println(jsonparser.Get(value, "date"))
+	}, "posts")
 }
