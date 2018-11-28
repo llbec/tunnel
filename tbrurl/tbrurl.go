@@ -34,6 +34,11 @@ func Get() (string, error) {
 		target, _ := jsonparser.GetString(value, "body")
 		reg, _ := regexp.Compile(`tumblr_([0-9a-zA-Z]{17}).mp4`)
 		url := reg.FindString(target)
+		if url == "" {
+			target, _ = jsonparser.GetString(value, "video_url")
+			reg, _ = regexp.Compile(`tumblr_([0-9a-zA-Z]{17}).mp4`)
+			url = reg.FindString(target)
+		}
 		summary, _ := jsonparser.GetString(value, "summary")
 		if summary == "" {
 			date, _ := jsonparser.GetString(value, "date")
