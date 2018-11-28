@@ -52,7 +52,7 @@ func Get() (string, error) {
 	}, "response", "posts")
 
 	for title := range mapURL {
-		fmt.Printf("%d. %s\n\t%s", n, title, mapURL[title])
+		fmt.Printf("%d. %s\n\t%s\n", n, title, mapURL[title])
 		n++
 	}
 
