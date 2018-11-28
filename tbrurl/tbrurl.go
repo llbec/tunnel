@@ -64,6 +64,10 @@ func Get() (string, error) {
 		n++
 	}
 
+	var sIndex int
+	fmt.Print("Select a number and enter: ")
+	fmt.Scanln(&sIndex)
+
 	return string(body), nil
 }
 
@@ -88,6 +92,11 @@ func GetFile() (string, error) {
 }
 
 //private
+type tItem struct {
+	title string
+	url   string
+}
+
 type tbrGet struct {
 	prefix  string
 	region  string
@@ -96,6 +105,8 @@ type tbrGet struct {
 	media   string
 	key     string
 }
+
+var itemPrefix = "http://ve.media.tumblr.com/"
 
 var tGeter tbrGet
 
