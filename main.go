@@ -9,6 +9,7 @@ import (
 
 func main() {
 	var name string
+
 	fmt.Println("Enter the usrname:")
 	fmt.Scanln(&name)
 	//geter := tbrget.NewGeter(name)
@@ -19,6 +20,6 @@ func main() {
 	}
 	//fmt.Print(s)
 	jsonparser.ArrayEach([]byte(s), func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
-		fmt.Println(jsonparser.Get(value, "date"))
-	}, "posts")
+		fmt.Println(jsonparser.GetString(value, "date"))
+	}, "response", "posts")
 }
