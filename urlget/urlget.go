@@ -2,7 +2,9 @@ package urlget
 
 import (
 	"errors"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -13,16 +15,21 @@ import (
 const gRangeSize = 1024
 const gThreadNum = 4
 
-var gaStatus []int
-
 type tPiece struct {
 	posStart int64
 	posEnd   int64
+	status   int
+	data     string
+	err      error
+}
+
+func (h *tPiece) String() string {
+	return fmt.Sprintf("bytes=%d-%d", h.posStart, h.posEnd)
 }
 
 //TTask is a dscription about download task
 type TTask struct {
-	name   string
+	name   string //filename
 	url    string
 	pieces []tPiece
 	state  int64
@@ -49,7 +56,7 @@ func NewTask(url string, name string) (task TTask) {
 				}
 				return v, 1
 			}(int64(i*gRangeSize + gRangeSize - 1))
-			task.pieces = append(task.pieces, tPiece{int64(i * gRangeSize), pos})
+			task.pieces = append(task.pieces, tPiece{int64(i * gRangeSize), pos, 0, "", nil})
 			n++
 		}
 	}
@@ -75,7 +82,6 @@ func (task *TTask) Run() {
 	}
 	//var thchannel chan int = make(chan int, gThreadNum)
 	for i := 0; i < len(task.pieces); i++ {
-		gaStatus = append(gaStatus, 0)
 		//thchannel <- i
 		go task.partialDownload(i)
 	}
@@ -91,10 +97,37 @@ func (task *TTask) direcDownload() (int64, error) {
 	return n, err
 }
 
-func (task *TTask) partialDownload(pos int) (n int64, err error) {
-	for {
-		//thchannel
+func (task *TTask) partialDownload(pos int) {
+	// make HTTP Range request to get file from server
+	req, err := http.NewRequest(http.MethodGet, task.url, nil)
+	if err != nil {
+		task.pieces[pos].err = err
+		task.pieces[pos].status = 0
+		return
 	}
+	req.Header.Set("Range", task.pieces[pos].String())
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		task.pieces[pos].err = err
+		task.pieces[pos].status = 0
+		//thchannel <- -1
+		return
+	}
+	defer resp.Body.Close()
+
+	// read data from response and write it
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		task.pieces[pos].err = err
+		task.pieces[pos].status = 0
+		//thchannel <- -1
+		return
+	}
+	task.pieces[pos].status = 1
+	task.pieces[pos].data = string(data[:])
+	//thchannel <- pos
 }
 
 // probe makes am HTTP request to the site and return site infomation.
