@@ -21,16 +21,8 @@ func main() {
 	//fmt.Print(s)
 	n := 1
 	jsonparser.ArrayEach([]byte(s), func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
-		summary, err := jsonparser.GetString(data, "summary")
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-		date, err := jsonparser.GetString(data, "date")
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
+		summary, _ := jsonparser.GetString(value, "summary")
+		date, _ := jsonparser.GetString(value, "date")
 		fmt.Printf("%d. %s\t%s\n", n, summary, date)
 		n++
 	}, "response", "posts")
