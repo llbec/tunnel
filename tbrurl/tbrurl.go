@@ -13,7 +13,7 @@ import (
 //Get public func, return target url
 func Get() (string, error) {
 	var name string
-	mapURL := make(map[string]string)
+	var slaiceItems []tItem
 
 	fmt.Println("Enter the usrname:")
 	fmt.Scanln(&name)
@@ -29,7 +29,6 @@ func Get() (string, error) {
 		return "", err
 	}
 
-	n := 1
 	jsonparser.ArrayEach([]byte(body), func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 		target, _ := jsonparser.GetString(value, "body")
 		reg, _ := regexp.Compile(`tumblr_([0-9a-zA-Z]{17}).mp4`)
@@ -39,36 +38,41 @@ func Get() (string, error) {
 			reg, _ = regexp.Compile(`tumblr_([0-9a-zA-Z]{17}).mp4`)
 			url = reg.FindString(target)
 		}
-		summary, _ := jsonparser.GetString(value, "summary")
-		if summary == "" {
-			date, _ := jsonparser.GetString(value, "date")
-			//fmt.Printf("%d. %s\n", n, date)
-			mapURL[date] = url
-		} else {
-			//fmt.Printf("%d. %s\n", n, summary)
-			titles := strings.Split(summary, "\n")
+		var summary string
+		summarys, _ := jsonparser.GetString(value, "summary")
+		reg, _ = regexp.Compile(`\n`)
+		if reg.MatchString(summarys) == true {
+			titles := strings.Split(summarys, "\n")
 			for i, title := range titles {
 				if title != "" {
-					mapURL[summary] = url
+					summary = title
 					break
 				}
 				if i == len(titles) {
 					fmt.Print("[ERROR] no title\n")
 				}
 			}
+		} else {
+			summary = summarys
 		}
+		date, _ := jsonparser.GetString(value, "date")
+
+		slaiceItems = append(slaiceItems, tItem{summary, date, url})
 	}, "response", "posts")
 
-	for title := range mapURL {
-		fmt.Printf("%d. %s\n\t%s\n", n, title, mapURL[title])
-		n++
+	for i, obj := range slaiceItems {
+		fmt.Printf("%d. %s\t%s\n", i, func(o tItem) string {
+			if o.summary == "" {
+				return o.date
+			}
+			return o.summary
+		}(obj), obj.item)
 	}
-
 	var sIndex int
 	fmt.Print("Select a number and enter: ")
 	fmt.Scanln(&sIndex)
 
-	return string(body), nil
+	return itemPrefix + slaiceItems[sIndex].item, nil
 }
 
 //GetFile get url file
@@ -93,8 +97,9 @@ func GetFile() (string, error) {
 
 //private
 type tItem struct {
-	title string
-	url   string
+	summary string
+	date    string
+	item    string
 }
 
 type tbrGet struct {

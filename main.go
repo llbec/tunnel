@@ -15,10 +15,10 @@ func main() {
 
 	if cmd == 1 {
 		s, _ = tbrurl.GetFile()
-		fmt.Print(s)
 	} else if cmd == 2 {
 		s, _ = tbrurl.Get()
 	} else {
 		return
 	}
+	fmt.Print("Result is:\n", s)
 }
