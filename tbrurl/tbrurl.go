@@ -47,10 +47,13 @@ func Get() (string, error) {
 		} else {
 			//fmt.Printf("%d. %s\n", n, summary)
 			titles := strings.Split(summary, "\n")
-			for _, title := range titles {
+			for i, title := range titles {
 				if title != "" {
 					mapURL[summary] = url
 					break
+				}
+				if i == len(titles) {
+					fmt.Print("[ERROR] no title\n")
 				}
 			}
 		}
