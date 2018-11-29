@@ -102,19 +102,30 @@ func (task *TTask) Run() {
 
 	//multi threads
 	thchannel := make(chan int, gThreadNum)
-	for i := 0; i < len(task.pieces); i++ {
-		if task.pieces[i].status != 0 {
-			continue
+	log.Printf("Total piece:%d", len(task.pieces))
+	nCount := 0
+	searchPiece := func() *tPiece {
+		for i := 0; i < len(task.pieces); i++ {
+			if task.pieces[i].status == 0 {
+				return &task.pieces[i]
+			}
 		}
-		go func(pos int) {
-			task.pieces[pos].status = -1
-			task.partialDownload(pos)
-			thchannel <- pos
-		}(i)
+		return nil
 	}
-	log.Printf("Total piece:%d started", len(task.pieces))
+	downloadPiece := func(p *tPiece) {
+		if p == nil {
+			return
+		}
+		p.status = -1
+		task.partialDownload(p)
+		nCount++
+		thchannel <- nCount
+	}
+	for i := 0; i < gThreadNum; i++ {
+		go downloadPiece(searchPiece())
+	}
 	for len(task.pieces) != 0 {
-		log.Print("Picec ", <-thchannel, "completed")
+		log.Print("Picec ", <-thchannel, " completed")
 		for i := 0; i < len(task.pieces); {
 			if task.pieces[i].status == 1 {
 				n, err := task.file.WriteAt([]byte(task.pieces[i].data), task.pieces[i].posStart)
@@ -126,17 +137,9 @@ func (task *TTask) Run() {
 				task.pieces = append(task.pieces[:i], task.pieces[i+1:]...)
 				continue
 			}
-			if task.pieces[i].status != 0 {
-				i++
-				continue
-			}
-			go func(pos int) {
-				task.pieces[pos].status = -1
-				task.partialDownload(pos)
-				thchannel <- pos
-			}(i)
 			i++
 		}
+		go downloadPiece(searchPiece())
 	}
 }
 
@@ -160,22 +163,21 @@ func (task *TTask) direcDownload() (int64, error) {
 	return n, err
 }
 
-func (task *TTask) partialDownload(pos int) {
+func (task *TTask) partialDownload(p *tPiece) {
 	// make HTTP Range request to get file from server
 	req, err := http.NewRequest(http.MethodGet, task.url, nil)
 	if err != nil {
-		task.pieces[pos].err = err
-		task.pieces[pos].status = 0
+		p.err = err
+		p.status = 0
 		return
 	}
-	req.Header.Set("Range", task.pieces[pos].String())
+	req.Header.Set("Range", p.String())
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		task.pieces[pos].err = err
-		task.pieces[pos].status = 0
-		//thchannel <- -1
+		p.err = err
+		p.status = 0
 		return
 	}
 	defer resp.Body.Close()
@@ -183,14 +185,12 @@ func (task *TTask) partialDownload(pos int) {
 	// read data from response and write it
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		task.pieces[pos].err = err
-		task.pieces[pos].status = 0
-		//thchannel <- -1
+		p.err = err
+		p.status = 0
 		return
 	}
-	task.pieces[pos].data = string(data[:])
-	task.pieces[pos].status = 1
-	//thchannel <- pos
+	p.data = string(data[:])
+	p.status = 1
 }
 
 // probe makes am HTTP request to the site and return site infomation.
