@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/buger/jsonparser"
+	"github.com/tunnel/urlget"
 )
 
 //Get public func, return target url
@@ -149,7 +150,7 @@ func GetFile() (string, error) {
 	return string(body), nil
 }
 
-//TransHandle response to /tbr/ ewquest
+//TransHandle response to /tbr/ request
 func TransHandle(w http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	args := strings.Split(req.URL.Path, "/")
@@ -169,6 +170,29 @@ func TransHandle(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 		fmt.Fprintf(w, rs)
+		return
+	}
+	http.NotFound(w, req)
+}
+
+//DownLoadHandle reponse to /tbrget/ request
+func DownLoadHandle(w http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+
+	args := strings.Split(req.URL.Path, "/")
+
+	log.Print(func(list []string) string {
+		var res string
+		for i, s := range list {
+			res += fmt.Sprintf("[%d]%s", i, s)
+		}
+		return res
+	}(args))
+
+	if len(args) > 1 {
+		url := itemPrefix + args[1]
+		newTask := urlget.NewTask(url)
+		newTask.Relay(w)
 		return
 	}
 	http.NotFound(w, req)

@@ -148,6 +148,24 @@ func (task *TTask) Run() {
 	fmt.Printf(". done, file size is :%d\n", loadlen)
 }
 
+//Relay get files and relay
+func (task *TTask) Relay(w http.ResponseWriter) {
+	if task.state == -1 {
+		log.Fatal("Task not ready!")
+		return
+	}
+	resp, err := http.Get(task.url)
+	if err != nil {
+		fmt.Fprintf(w, err.Error())
+	}
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Fprintf(w, err.Error())
+	}
+	w.Write(data)
+	return
+}
+
 func parseFileName(url string) string {
 	tokens := strings.Split(url, "/")
 	fileName := tokens[len(tokens)-1]

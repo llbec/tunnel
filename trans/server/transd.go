@@ -12,6 +12,7 @@ func main() {
 	log.Print("Server start ...")
 	http.HandleFunc("/", hello) //设置访问的路由
 	http.HandleFunc("/tbr/", tbrurl.TransHandle)
+	http.HandleFunc("/tbrget/", tbrurl.DownLoadHandle)
 
 	err := http.ListenAndServe(":9090", nil) //设置监听的端口
 	if err != nil {
