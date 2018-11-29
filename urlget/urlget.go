@@ -145,7 +145,7 @@ func (task *TTask) Run() {
 		fmt.Printf(".")
 		go downloadPiece()
 	}
-	fmt.Printf(". done, file size is :%d", loadlen)
+	fmt.Printf(". done, file size is :%d\n", loadlen)
 }
 
 func parseFileName(url string) string {
