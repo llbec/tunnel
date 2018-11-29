@@ -3,6 +3,7 @@ package tbrurl
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -146,6 +147,31 @@ func GetFile() (string, error) {
 		return "", err
 	}
 	return string(body), nil
+}
+
+//TransHandle response to /tbr/ ewquest
+func TransHandle(w http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	args := strings.Split(req.URL.Path, "/")
+
+	log.Print(func(list []string) string {
+		var res string
+		for i, s := range list {
+			res += fmt.Sprintf("[%d]%s", i, s)
+		}
+		return res
+	}(args))
+
+	if len(args) > 1 {
+		rs, err := GetItems(args[1])
+		if err != nil {
+			fmt.Fprintf(w, err.Error())
+			return
+		}
+		fmt.Fprintf(w, rs)
+		return
+	}
+	http.NotFound(w, req)
 }
 
 //private
