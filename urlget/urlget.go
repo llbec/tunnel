@@ -107,6 +107,7 @@ func (task *TTask) Run() {
 				return false
 			}
 		}
+		log.Printf("\tTotal piece:%d completed", len(task.pieces))
 		return true
 	}
 	thchannel := make(chan int, gThreadNum)
@@ -123,7 +124,7 @@ func (task *TTask) Run() {
 		}
 		pos := <-thchannel
 		if task.pieces[pos].status == 1 {
-			log.Printf("\tTotal piece:%d, number %d is complete", len(task.pieces), pos)
+			log.Printf("\tPiece number %d is complete", pos)
 		}
 	}
 	for i := 0; i < len(task.pieces); i++ {
