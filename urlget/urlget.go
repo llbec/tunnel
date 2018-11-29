@@ -126,6 +126,9 @@ func (task *TTask) Run() {
 		return true
 	}
 
+	log.Print("Start download ")
+	var loadlen int64
+
 	for i := 0; i < gThreadNum; i++ {
 		go downloadPiece()
 	}
@@ -137,9 +140,12 @@ func (task *TTask) Run() {
 			close(thchannel)
 			return
 		}
-		log.Printf("Write from %d to %d", msg.posStart, msg.posStart+int64(n)-1)
+		//log.Printf("Write from %d to %d", msg.posStart, msg.posStart+int64(n)-1)
+		loadlen += int64(n)
+		fmt.Printf(".")
 		go downloadPiece()
 	}
+	fmt.Printf(". done, file size is :%d", loadlen)
 }
 
 func parseFileName(url string) string {
