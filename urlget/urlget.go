@@ -101,13 +101,19 @@ func (task *TTask) Run() {
 	}*/
 
 	//multi threads
+	log.Printf("Total piece:%d started", len(task.pieces))
 	isFinish := func() bool {
-		for i := 0; i < len(task.pieces); i++ {
+		for i := 0; i < len(task.pieces); {
 			if task.pieces[i].status != 1 {
 				return false
 			}
+			n, err := task.file.WriteAt([]byte(task.pieces[i].data), task.pieces[i].posStart)
+			if n != task.pieces[i].Length() || err != nil {
+				log.Fatal(n, "\t", err)
+				return true
+			}
+			task.pieces = append(task.pieces[:i], task.pieces[i+1:]...)
 		}
-		log.Printf("\tTotal piece:%d completed", len(task.pieces))
 		return true
 	}
 	thchannel := make(chan int, gThreadNum)
@@ -124,14 +130,7 @@ func (task *TTask) Run() {
 		}
 		pos := <-thchannel
 		if task.pieces[pos].status == 1 {
-			log.Printf("\tPiece number %d is complete", pos)
-		}
-	}
-	for i := 0; i < len(task.pieces); i++ {
-		n, err := task.file.WriteAt([]byte(task.pieces[i].data), task.pieces[i].posStart)
-		if n != task.pieces[i].Length() || err != nil {
-			log.Fatal(n, "\t", err)
-			return
+			log.Printf("Piece number %d is complete", pos)
 		}
 	}
 }
