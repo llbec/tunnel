@@ -60,6 +60,7 @@ func NewTask(url string) *TTask {
 				}
 				return v, 1
 			}(int64(i*gRangeSize + gRangeSize - 1))
+			log.Print("Add piece from ", i*gRangeSize, " to ", pos)
 			task.pieces = append(task.pieces, tPiece{int64(i * gRangeSize), pos, 0, "", nil})
 			n++
 		}
@@ -125,7 +126,7 @@ func (task *TTask) Run() {
 		go downloadPiece(searchPiece())
 	}
 	for len(task.pieces) != 0 {
-		log.Print("Picec ", <-thchannel, " completed")
+		<-thchannel //log.Print("Picec ", <-thchannel, " completed")
 		for i := 0; i < len(task.pieces); {
 			if task.pieces[i].status == 1 {
 				n, err := task.file.WriteAt([]byte(task.pieces[i].data), task.pieces[i].posStart)
@@ -134,6 +135,7 @@ func (task *TTask) Run() {
 					close(thchannel)
 					return
 				}
+				log.Print("Remove piece from ", task.pieces[i].posStart, " to ", task.pieces[i].posEnd)
 				task.pieces = append(task.pieces[:i], task.pieces[i+1:]...)
 				continue
 			}
