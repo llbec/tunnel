@@ -27,6 +27,10 @@ func (h *tPiece) String() string {
 	return fmt.Sprintf("bytes=%d-%d", h.posStart, h.posEnd)
 }
 
+func (h *tPiece) Length() int {
+	return int(h.posEnd - h.posStart + 1)
+}
+
 //TTask is a dscription about download task
 type TTask struct {
 	name   string //filename
@@ -83,7 +87,14 @@ func (task *TTask) Run() {
 	//var thchannel chan int = make(chan int, gThreadNum)
 	for i := 0; i < len(task.pieces); i++ {
 		//thchannel <- i
-		go task.partialDownload(i)
+		for task.pieces[i].status != 1 {
+			task.partialDownload(i)
+		}
+		n, err := task.file.WriteAt([]byte(task.pieces[i].data), task.pieces[i].posStart)
+		if n != task.pieces[i].Length() || err != nil {
+			log.Fatal(n, "\t", err)
+			return
+		}
 	}
 }
 
