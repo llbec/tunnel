@@ -41,14 +41,15 @@ type TTask struct {
 }
 
 //NewTask is TTask's constructor
-func NewTask(url string, name string) (task TTask) {
+func NewTask(url string, name string) *TTask {
+	task := new(TTask)
 	task.url = url
 	task.name = name
 	task.state = -1
 
 	len, err := probe(task.url)
 	if err != nil {
-		return
+		return task
 	}
 	var n int64
 	if len != 0 {
@@ -68,15 +69,19 @@ func NewTask(url string, name string) (task TTask) {
 	task.file, err = os.Create(task.name)
 	if err != nil {
 		log.Fatal(err)
-		return
+		return task
 	}
 
 	task.state = n
-	return
+	return task
 }
 
 //Run start the task
 func (task *TTask) Run() {
+	if task.state == -1 {
+		log.Fatal("Task not ready!")
+		return
+	}
 	if len(task.pieces) == 0 {
 		_, err := task.direcDownload()
 		if err != nil {
