@@ -120,7 +120,7 @@ func (geter *tbrGet) init() {
 	geter.region = "blog/"
 	geter.method = "posts/"
 	geter.media = "video"
-	geter.key = "?api_key=5iYundnZV0CW2fIdBafMhShEWx0mOep8SFVKXmCUi8oEAqABSZ"
+	geter.key = "?api_key=takRkZUgF7x3h5Dh296ZDZt3jkaFdILFsBLYBLG9M1pwSArUOe" //secret ByrLhtHqjefHa0T7pqvsowTkMcsVwmOTTdGXIiOuxOeuf11nNM //"?api_key=5iYundnZV0CW2fIdBafMhShEWx0mOep8SFVKXmCUi8oEAqABSZ"
 }
 
 func newGeter(name string) tbrGet {
