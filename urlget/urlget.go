@@ -16,12 +16,15 @@ import (
 const gRangeSize = 1024
 const gThreadNum = 4
 
+type tMessage struct {
+	posStart int64
+	data     []byte
+}
+
 type tPiece struct {
 	posStart int64
 	posEnd   int64
 	status   int
-	data     string
-	err      error
 }
 
 func (h *tPiece) String() string {
@@ -61,7 +64,7 @@ func NewTask(url string) *TTask {
 				return v, 1
 			}(int64(i*gRangeSize + gRangeSize - 1))
 			log.Print("Add piece from ", i*gRangeSize, " to ", pos)
-			task.pieces = append(task.pieces, tPiece{int64(i * gRangeSize), pos, 0, "", nil})
+			task.pieces = append(task.pieces, tPiece{int64(i * gRangeSize), pos, 0})
 			n++
 		}
 	}
@@ -102,46 +105,40 @@ func (task *TTask) Run() {
 	}*/
 
 	//multi threads
-	thchannel := make(chan int, gThreadNum)
+	thchannel := make(chan tMessage, gThreadNum)
 	log.Printf("Total piece:%d", len(task.pieces))
-	nCount := 0
-	searchPiece := func() *tPiece {
+
+	downloadPiece := func() {
 		for i := 0; i < len(task.pieces); i++ {
 			if task.pieces[i].status == 0 {
-				return &task.pieces[i]
+				task.pieces[i].status = -1
+				task.partialDownload(i, thchannel)
+				return
 			}
 		}
-		return nil
 	}
-	downloadPiece := func(p *tPiece) {
-		if p == nil {
+
+	isDone := func() bool {
+		for i := 0; i < len(task.pieces); i++ {
+			if task.pieces[i].status != 1 {
+				return false
+			}
+		}
+		return true
+	}
+
+	for i := 0; i < gThreadNum; i++ {
+		go downloadPiece()
+	}
+	for isDone() == false {
+		msg := <-thchannel //log.Print("Picec ", <-thchannel, " completed")
+		n, err := task.file.WriteAt(msg.data, msg.posStart)
+		if n != len(msg.data) || err != nil {
+			log.Fatal(n, "\t", err)
+			close(thchannel)
 			return
 		}
-		p.status = -1
-		task.partialDownload(p)
-		nCount++
-		thchannel <- nCount
-	}
-	for i := 0; i < gThreadNum; i++ {
-		go downloadPiece(searchPiece())
-	}
-	for len(task.pieces) != 0 {
-		<-thchannel //log.Print("Picec ", <-thchannel, " completed")
-		for i := 0; i < len(task.pieces); {
-			if task.pieces[i].status == 1 {
-				n, err := task.file.WriteAt([]byte(task.pieces[i].data), task.pieces[i].posStart)
-				if n != task.pieces[i].Length() || err != nil {
-					log.Fatal(n, "\t", err)
-					close(thchannel)
-					return
-				}
-				log.Print("Remove piece from ", task.pieces[i].posStart, " to ", task.pieces[i].posEnd)
-				task.pieces = append(task.pieces[:i], task.pieces[i+1:]...)
-				continue
-			}
-			i++
-		}
-		go downloadPiece(searchPiece())
+		go downloadPiece()
 	}
 }
 
@@ -165,21 +162,19 @@ func (task *TTask) direcDownload() (int64, error) {
 	return n, err
 }
 
-func (task *TTask) partialDownload(p *tPiece) {
+func (task *TTask) partialDownload(pos int, ch chan tMessage) {
 	// make HTTP Range request to get file from server
 	req, err := http.NewRequest(http.MethodGet, task.url, nil)
 	if err != nil {
-		p.err = err
-		p.status = 0
+		task.pieces[pos].status = 0
 		return
 	}
-	req.Header.Set("Range", p.String())
+	req.Header.Set("Range", task.pieces[pos].String())
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		p.err = err
-		p.status = 0
+		task.pieces[pos].status = 0
 		return
 	}
 	defer resp.Body.Close()
@@ -187,12 +182,12 @@ func (task *TTask) partialDownload(p *tPiece) {
 	// read data from response and write it
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		p.err = err
-		p.status = 0
+		task.pieces[pos].status = 0
 		return
 	}
-	p.data = string(data[:])
-	p.status = 1
+
+	task.pieces[pos].status = 1
+	ch <- tMessage{task.pieces[pos].posStart, data}
 }
 
 // probe makes am HTTP request to the site and return site infomation.
