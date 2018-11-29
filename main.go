@@ -18,10 +18,10 @@ func main() {
 		s, _ = tbrurl.GetFile()
 	} else if cmd == 2 {
 		s, _ = tbrurl.Get()
-		newTask := urlget.NewTask(s, "test.mp4")
+		newTask := urlget.NewTask(s)
 		newTask.Run()
 	} else {
 		return
 	}
-	fmt.Print("Result is:\n", s)
+	fmt.Print("Result is:\n", s, "\n")
 }

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -33,7 +34,6 @@ func (h *tPiece) Length() int {
 
 //TTask is a dscription about download task
 type TTask struct {
-	name   string //filename
 	url    string
 	pieces []tPiece
 	state  int64
@@ -41,10 +41,9 @@ type TTask struct {
 }
 
 //NewTask is TTask's constructor
-func NewTask(url string, name string) *TTask {
+func NewTask(url string) *TTask {
 	task := new(TTask)
 	task.url = url
-	task.name = name
 	task.state = -1
 
 	len, err := probe(task.url)
@@ -66,7 +65,7 @@ func NewTask(url string, name string) *TTask {
 		}
 	}
 
-	task.file, err = os.Create(task.name)
+	task.file, err = os.Create(parseFileName(task.url))
 	if err != nil {
 		log.Fatal(err)
 		return task
@@ -89,9 +88,8 @@ func (task *TTask) Run() {
 		}
 		return
 	}
-	//var thchannel chan int = make(chan int, gThreadNum)
-	for i := 0; i < len(task.pieces); i++ {
-		//thchannel <- i
+
+	/*for i := 0; i < len(task.pieces); i++ {
 		for task.pieces[i].status != 1 {
 			task.partialDownload(i)
 		}
@@ -100,7 +98,39 @@ func (task *TTask) Run() {
 			log.Fatal(n, "\t", err)
 			return
 		}
+	}*/
+
+	//multi threads
+	thchannel := make(chan int, gThreadNum)
+	for {
+		for i := 0; i < len(task.pieces); i++ {
+			if task.pieces[i].status != 0 {
+				continue
+			}
+			go func(pos int) {
+				task.pieces[pos].status = -1
+				task.partialDownload(pos)
+				thchannel <- pos
+			}(i)
+		}
+		if len(thchannel) <= 0 {
+			break
+		}
+		pos := <-thchannel
+		if task.pieces[pos].status == 1 {
+			log.Printf("\tTotal piece:%d, number %d is complete", len(task.pieces), pos)
+		}
 	}
+}
+
+func parseFileName(url string) string {
+	tokens := strings.Split(url, "/")
+	fileName := tokens[len(tokens)-1]
+
+	if fileName == "" {
+		fileName = "index.html"
+	}
+	return fileName
 }
 
 func (task *TTask) direcDownload() (int64, error) {
