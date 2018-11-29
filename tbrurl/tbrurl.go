@@ -75,6 +75,59 @@ func Get() (string, error) {
 	return itemPrefix + slaiceItems[sIndex].item, nil
 }
 
+//GetItems arg usrname, return tables of item
+func GetItems(usrname string) (string, error) {
+	var slaiceItems []tItem
+	var result string
+
+	tGeter = newGeter(usrname)
+	resp, err := http.Get(tGeter.url())
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	jsonparser.ArrayEach([]byte(body), func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+		target, _ := jsonparser.GetString(value, "body")
+		reg, _ := regexp.Compile(`tumblr_([0-9a-zA-Z]{17}).mp4`)
+		url := reg.FindString(target)
+		if url == "" {
+			target, _ = jsonparser.GetString(value, "video_url")
+			reg, _ = regexp.Compile(`tumblr_([0-9a-zA-Z]{17}).mp4`)
+			url = reg.FindString(target)
+		}
+		var summary string
+		summarys, _ := jsonparser.GetString(value, "summary")
+		reg, _ = regexp.Compile(`\n`)
+		if reg.MatchString(summarys) == true {
+			titles := strings.Split(summarys, "\n")
+			for i, title := range titles {
+				if title != "" {
+					summary = title
+					break
+				}
+				if i == len(titles) {
+					fmt.Print("[ERROR] no title\n")
+				}
+			}
+		} else {
+			summary = summarys
+		}
+		date, _ := jsonparser.GetString(value, "date")
+
+		slaiceItems = append(slaiceItems, tItem{summary, date, url})
+	}, "response", "posts")
+
+	for i, obj := range slaiceItems {
+		result += fmt.Sprintf("%2d.\t%s\t%s\t%s\n", i, obj.item, obj.date, obj.summary)
+	}
+	return result, nil
+}
+
 //GetFile get url file
 func GetFile() (string, error) {
 	var name string
