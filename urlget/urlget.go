@@ -63,10 +63,10 @@ func NewTask(url string) *TTask {
 				}
 				return v, 1
 			}(int64(i*gRangeSize + gRangeSize - 1))
-			log.Print("Add piece from ", i*gRangeSize, " to ", pos)
 			task.pieces = append(task.pieces, tPiece{int64(i * gRangeSize), pos, 0})
 			n++
 		}
+		log.Printf("File length: %d", len)
 	}
 
 	task.file, err = os.Create(parseFileName(task.url))
@@ -106,7 +106,6 @@ func (task *TTask) Run() {
 
 	//multi threads
 	thchannel := make(chan tMessage, gThreadNum)
-	log.Printf("Total piece:%d", len(task.pieces))
 
 	downloadPiece := func() {
 		for i := 0; i < len(task.pieces); i++ {
@@ -138,6 +137,7 @@ func (task *TTask) Run() {
 			close(thchannel)
 			return
 		}
+		log.Printf("Write from %d to %d", msg.posStart, msg.posStart+int64(n)-1)
 		go downloadPiece()
 	}
 }
