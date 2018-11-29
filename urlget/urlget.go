@@ -114,16 +114,7 @@ func (task *TTask) Run() {
 	}
 	log.Printf("Total piece:%d started", len(task.pieces))
 	for len(task.pieces) != 0 {
-		pos := <-thchannel
-		if task.pieces[pos].status == 1 {
-			n, err := task.file.WriteAt([]byte(task.pieces[pos].data), task.pieces[pos].posStart)
-			if n != task.pieces[pos].Length() || err != nil {
-				log.Fatal(n, "\t", err)
-				return
-			}
-			task.pieces = append(task.pieces[:pos], task.pieces[pos+1:]...)
-			log.Printf("Piece number %d is complete", pos)
-		}
+		log.Print("Picec ", <-thchannel, "completed")
 		for i := 0; i < len(task.pieces); {
 			if task.pieces[i].status == 1 {
 				n, err := task.file.WriteAt([]byte(task.pieces[i].data), task.pieces[i].posStart)
