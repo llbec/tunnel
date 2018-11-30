@@ -163,8 +163,8 @@ func TransHandle(w http.ResponseWriter, req *http.Request) {
 		return res
 	}(args))
 
-	if len(args) > 1 {
-		rs, err := GetItems(args[1])
+	if len(args) > 2 {
+		rs, err := GetItems(args[2])
 		if err != nil {
 			fmt.Fprintf(w, err.Error())
 			return
@@ -189,8 +189,8 @@ func DownLoadHandle(w http.ResponseWriter, req *http.Request) {
 		return res
 	}(args))
 
-	if len(args) > 1 {
-		url := itemPrefix + args[1]
+	if len(args) > 2 {
+		url := itemPrefix + args[2]
 		newTask := urlget.NewTask(url)
 		newTask.Relay(w)
 		return
