@@ -156,7 +156,7 @@ func TransHandle(w http.ResponseWriter, req *http.Request) {
 	args := strings.Split(req.URL.Path, "/")
 
 	log.Print(func(list []string) string {
-		var res string
+		res := "tbrurl ask: "
 		for i, s := range list {
 			res += fmt.Sprintf("[%d]%s", i, s)
 		}
@@ -182,7 +182,7 @@ func DownLoadHandle(w http.ResponseWriter, req *http.Request) {
 	args := strings.Split(req.URL.Path, "/")
 
 	log.Print(func(list []string) string {
-		var res string
+		res := "tbrurl download: "
 		for i, s := range list {
 			res += fmt.Sprintf("[%d]%s", i, s)
 		}
