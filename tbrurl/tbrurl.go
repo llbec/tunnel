@@ -146,6 +146,7 @@ func DownLoadHandle(w http.ResponseWriter, req *http.Request) {
 	} else if req.Method == "POST" {
 		body, _ := ioutil.ReadAll(req.Body)
 		req.Body.Close()
+		fmt.Print("Post: ", body)
 		var items []string
 		jsonparser.ArrayEach([]byte(body), func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 			s, _ := jsonparser.GetString(value, "item")
