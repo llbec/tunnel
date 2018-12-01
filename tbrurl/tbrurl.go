@@ -168,6 +168,14 @@ func DownLoadHandle(w http.ResponseWriter, req *http.Request) {
 		newTask := urlget.NewTask(items[index])
 		newTask.Relay(w)
 		return
+	} else {
+		fmt.Print(req.Method)
+		if len(args) > 2 {
+			url := itemPrefix + args[2]
+			newTask := urlget.NewTask(url)
+			newTask.Relay(w)
+			return
+		}
 	}
 	http.NotFound(w, req)
 }
