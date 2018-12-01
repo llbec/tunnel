@@ -129,15 +129,14 @@ func DownLoadHandle(w http.ResponseWriter, req *http.Request) {
 	args := strings.Split(req.URL.Path, "/")
 
 	log.Print(func(list []string) string {
-		res := "tbrurl download: "
+		res := "tbrurl download: " + req.Method + " "
 		for i, s := range list {
 			res += fmt.Sprintf("[%d]%s", i, s)
 		}
 		return res
 	}(args))
 
-	if req.Method == "Get" {
-		fmt.Print("GET:")
+	if req.Method == "GET" {
 		if len(args) > 2 {
 			url := itemPrefix + args[2]
 			newTask := urlget.NewTask(url)
@@ -145,7 +144,6 @@ func DownLoadHandle(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	} else if req.Method == "POST" {
-		fmt.Print("POST:")
 		body, _ := ioutil.ReadAll(req.Body)
 		req.Body.Close()
 		fmt.Print("Post: ", string(body))
@@ -168,14 +166,6 @@ func DownLoadHandle(w http.ResponseWriter, req *http.Request) {
 		newTask := urlget.NewTask(items[index])
 		newTask.Relay(w)
 		return
-	} else {
-		fmt.Print(req.Method)
-		if len(args) > 2 {
-			url := itemPrefix + args[2]
-			newTask := urlget.NewTask(url)
-			newTask.Relay(w)
-			return
-		}
 	}
 	http.NotFound(w, req)
 }
