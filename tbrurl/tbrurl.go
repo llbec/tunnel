@@ -209,16 +209,19 @@ func GetItems(usrname string) (string, error) {
 		slaiceItems = append(slaiceItems, tItem{summary, date, url})
 	}, "response", "posts")
 
-	result = "\"items\":{"
+	result = "{\"items\":["
 	for i, obj := range slaiceItems {
-		result += fmt.Sprintf("\"index\":%2d,\"item\":\"%s\",\"summary\":\"%s\"", i, obj.item, func() string {
+		result += fmt.Sprintf("{\"index\":%2d,\"item\":\"%s\",\"summary\":\"%s\"}", i, obj.item, func() string {
 			if obj.summary == "" {
 				return obj.date
 			}
 			return obj.summary
 		}())
+		if i != len(slaiceItems)-1 {
+			result += ","
+		}
 	}
-	result += "}"
+	result += "]}"
 	return result, nil
 }
 
