@@ -146,12 +146,19 @@ func DownLoadHandle(w http.ResponseWriter, req *http.Request) {
 	} else if req.Method == "POST" {
 		body, _ := ioutil.ReadAll(req.Body)
 		req.Body.Close()
-		fmt.Print("Post: ", body)
+		fmt.Print("Post: ", string(body))
 		var items []string
 		jsonparser.ArrayEach([]byte(body), func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 			s, _ := jsonparser.GetString(value, "item")
 			items = append(items, s)
 		}, "items")
+		fmt.Print(func() string {
+			res := "Items is:"
+			for i, s := range items {
+				s += fmt.Sprintf("\n\t[%2d]%s", i, s)
+			}
+			return res
+		}())
 		index, _ := jsonparser.GetInt(body, "selected")
 		if index < 0 || index > int64(len(items)) {
 			fmt.Fprintf(w, "[ERROR] Invalid index")
