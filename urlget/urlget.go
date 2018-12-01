@@ -35,6 +35,12 @@ func (h *tPiece) Length() int {
 	return int(h.posEnd - h.posStart + 1)
 }
 
+//TItem download item
+type TItem struct {
+	URL     string
+	Summary string
+}
+
 //TTask is a dscription about download task
 type TTask struct {
 	url    string
