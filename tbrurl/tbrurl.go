@@ -137,6 +137,7 @@ func DownLoadHandle(w http.ResponseWriter, req *http.Request) {
 	}(args))
 
 	if req.Method == "Get" {
+		fmt.Print("GET:")
 		if len(args) > 2 {
 			url := itemPrefix + args[2]
 			newTask := urlget.NewTask(url)
@@ -144,6 +145,7 @@ func DownLoadHandle(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	} else if req.Method == "POST" {
+		fmt.Print("POST:")
 		body, _ := ioutil.ReadAll(req.Body)
 		req.Body.Close()
 		fmt.Print("Post: ", string(body))
