@@ -88,7 +88,7 @@ func NewTask(url string) *TTask {
 //Run start the task
 func (task *TTask) Run() {
 	if task.state == -1 {
-		log.Fatal("Task not ready!")
+		log.Print("Task not ready!")
 		return
 	}
 	if len(task.pieces) == 0 {
@@ -157,7 +157,7 @@ func (task *TTask) Run() {
 //Relay get files and relay
 func (task *TTask) Relay(w http.ResponseWriter) {
 	if task.state == -1 {
-		log.Fatal("Task not ready!")
+		log.Print("Task not ready!")
 		return
 	}
 	resp, err := http.Get(task.url)
