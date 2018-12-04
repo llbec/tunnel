@@ -47,6 +47,7 @@ type TTask struct {
 	pieces []tPiece
 	state  int64
 	file   *os.File
+	length int64
 }
 
 //NewTask is TTask's constructor
@@ -90,6 +91,7 @@ func NewTask(url string) *TTask {
 	}
 
 	task.state = n
+	task.length = len
 	return task
 }
 
@@ -164,6 +166,7 @@ func CreateTask(url string, path string) *TTask {
 	log.Printf("Download file %s", fPath)
 
 	task.state = n
+	task.length = len
 	return task
 }
 
@@ -230,7 +233,7 @@ func (task *TTask) Run() {
 		}
 		//log.Printf("Write from %d to %d", msg.posStart, msg.posStart+int64(n)-1)
 		loadlen += int64(n)
-		fmt.Printf(".")
+		fmt.Printf("\r%d percent", loadlen*100/task.length)
 		go downloadPiece()
 	}
 	fmt.Printf(". done, file size is :%d\n", loadlen)

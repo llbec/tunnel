@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/buger/jsonparser"
@@ -14,67 +15,65 @@ import (
 
 //Get public func, return target url
 func Get() (string, error) {
-	var name string
-	var slaiceItems []tItem
+	var (
+		name        string
+		slaiceItems []tItem
+		nOffset     int64
+		nIndex      int
+	)
 
 	fmt.Println("Enter the usrname:")
 	fmt.Scanln(&name)
 
-	tGeter = newGeter(name)
-	resp, err := http.Get(tGeter.url())
+	posts, err := getPosts(name)
 	if err != nil {
+		log.Printf("%s:%s", name, err.Error())
 		return "", err
 	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
+	log.Printf("%s total %d posts", name, posts)
+
+	showItems := func() {
+		slaiceItems = getItemList(name, nOffset)
+		fmt.Printf("%s: Total %d medias\n", name, posts)
+		for i, obj := range slaiceItems {
+			fmt.Printf("%d. %s\t%s\n", int64(i)+nOffset, func(o tItem) string {
+				if o.summary == "" {
+					return o.date
+				}
+				return o.summary
+			}(obj), obj.item)
+		}
 	}
 
-	jsonparser.ArrayEach([]byte(body), func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
-		target, _ := jsonparser.GetString(value, "body")
-		reg, _ := regexp.Compile(`tumblr_([0-9a-zA-Z]{17}).mp4`)
-		url := reg.FindString(target)
-		if url == "" {
-			target, _ = jsonparser.GetString(value, "video_url")
-			reg, _ = regexp.Compile(`tumblr_([0-9a-zA-Z]{17}).mp4`)
-			url = reg.FindString(target)
-		}
-		var summary string
-		summarys, _ := jsonparser.GetString(value, "summary")
-		reg, _ = regexp.Compile(`\n`)
-		if reg.MatchString(summarys) == true {
-			titles := strings.Split(summarys, "\n")
-			for i, title := range titles {
-				if title != "" {
-					summary = title
-					break
-				}
-				if i == len(titles) {
-					fmt.Print("[ERROR] no title\n")
-				}
+	showItems()
+	for cmd := ""; cmd != "q"; {
+		fmt.Print("q to quit; n to next; p to prev; number to download.")
+		fmt.Scanln(&cmd)
+		if cmd == "n" {
+			if nOffset+20 >= posts {
+				fmt.Print("The End!\n")
+			} else {
+				nOffset += 20
+				showItems()
 			}
-		} else {
-			summary = summarys
-		}
-		date, _ := jsonparser.GetString(value, "date")
-
-		slaiceItems = append(slaiceItems, tItem{summary, date, url})
-	}, "response", "posts")
-
-	for i, obj := range slaiceItems {
-		fmt.Printf("%d. %s\t%s\n", i, func(o tItem) string {
-			if o.summary == "" {
-				return o.date
+		} else if cmd == "p" {
+			if nOffset-20 < 0 {
+				fmt.Print("The Begin!\n")
+			} else {
+				nOffset -= 20
+				showItems()
 			}
-			return o.summary
-		}(obj), obj.item)
+		} else if true == func() bool {
+			nIndex, err = strconv.Atoi(cmd)
+			if err == nil && int64(nIndex)-nOffset >= 0 && int(int64(nIndex)-nOffset) < len(slaiceItems) {
+				return true
+			}
+			return false
+		}() {
+			return itemPrefix + slaiceItems[int(int64(nIndex)-nOffset)].item, nil
+		}
 	}
-	var sIndex int
-	fmt.Print("Select a number and enter: ")
-	fmt.Scanln(&sIndex)
-
-	return itemPrefix + slaiceItems[sIndex].item, nil
+	return "", nil
 }
 
 //GetFile get url file
@@ -172,50 +171,8 @@ func DownLoadHandle(w http.ResponseWriter, req *http.Request) {
 
 //GetItems arg usrname, return tables of item
 func GetItems(usrname string) (string, error) {
-	var slaiceItems []tItem
+	slaiceItems := getItemList(usrname, 0)
 	var result string
-
-	tGeter = newGeter(usrname)
-	resp, err := http.Get(tGeter.url())
-	if err != nil {
-		return result, err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return result, err
-	}
-
-	jsonparser.ArrayEach([]byte(body), func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
-		target, _ := jsonparser.GetString(value, "body")
-		reg, _ := regexp.Compile(`tumblr_([0-9a-zA-Z]{17}).mp4`)
-		url := reg.FindString(target)
-		if url == "" {
-			target, _ = jsonparser.GetString(value, "video_url")
-			reg, _ = regexp.Compile(`tumblr_([0-9a-zA-Z]{17}).mp4`)
-			url = reg.FindString(target)
-		}
-		var summary string
-		summarys, _ := jsonparser.GetString(value, "summary")
-		reg, _ = regexp.Compile(`\n`)
-		if reg.MatchString(summarys) == true {
-			titles := strings.Split(summarys, "\n")
-			for i, title := range titles {
-				if title != "" {
-					summary = title
-					break
-				}
-				if i == len(titles) {
-					fmt.Print("[ERROR] no title\n")
-				}
-			}
-		} else {
-			summary = summarys
-		}
-		date, _ := jsonparser.GetString(value, "date")
-
-		slaiceItems = append(slaiceItems, tItem{summary, date, url})
-	}, "response", "posts")
 
 	result = "{\"items\":["
 	for i, obj := range slaiceItems {
@@ -282,6 +239,55 @@ func getPosts(name string) (int64, error) {
 		return 0, err
 	}
 	return jsonparser.GetInt(body, "response", "blog", "total_posts")
+}
+
+func getItemList(name string, offset int64) []tItem {
+	var (
+		slaiceItems []tItem
+	)
+	tGeter := newGeter(name)
+	resp, err := http.Get(tGeter.pageurl(offset))
+	if err != nil {
+		log.Printf("%s:%s", name, err.Error())
+		return nil
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("%s:%s", name, err.Error())
+		return nil
+	}
+	jsonparser.ArrayEach([]byte(body), func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+		target, _ := jsonparser.GetString(value, "body")
+		reg, _ := regexp.Compile(`tumblr_([0-9a-zA-Z]{17}).mp4`)
+		url := reg.FindString(target)
+		if url == "" {
+			target, _ = jsonparser.GetString(value, "video_url")
+			url = reg.FindString(target)
+			if url == "" {
+				url = reg.FindString(string(value))
+			}
+		}
+		var summary string
+		summarys, _ := jsonparser.GetString(value, "summary")
+		reg, _ = regexp.Compile(`\n`)
+		if reg.MatchString(summarys) == true {
+			titles := strings.Split(summarys, "\n")
+			for _, title := range titles {
+				if title != "" {
+					summary = title
+					break
+				}
+			}
+		} else {
+			summary = summarys
+		}
+		date, _ := jsonparser.GetString(value, "date")
+
+		slaiceItems = append(slaiceItems, tItem{summary, date, url})
+	}, "response", "posts")
+
+	return slaiceItems
 }
 
 func downloadPage(name string, offset int64) (int, error) {

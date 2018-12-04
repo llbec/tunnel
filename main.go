@@ -11,13 +11,17 @@ func main() {
 	var cmd int
 	var s string
 
-	fmt.Println("1. get file\n2. get url\nEnter the number:")
+	fmt.Println("1. get file\n2. download one\nEnter the number:")
 	fmt.Scanln(&cmd)
 
 	if cmd == 1 {
 		s, _ = tbrurl.GetFile()
 	} else if cmd == 2 {
 		s, _ = tbrurl.Get()
+		if s == "" {
+			fmt.Print("URL is NULL\n")
+			return
+		}
 		newTask := urlget.NewTask(s)
 		newTask.Run()
 	} else {
