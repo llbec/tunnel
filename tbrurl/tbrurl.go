@@ -239,8 +239,10 @@ func TbrDownLoader(name string) error {
 
 	posts, err := getPosts(name)
 	if err != nil {
+		log.Printf("%s:%s", name, err.Error())
 		return nil
 	}
+	log.Printf("%s total %d posts", name, posts)
 
 	for nOffset < posts {
 		download := func() error {
@@ -256,11 +258,13 @@ func TbrDownLoader(name string) error {
 		if download() != nil {
 			if download() != nil {
 				if err := download(); err != nil {
+					log.Printf("%s:%s", name, err.Error())
 					return err
 				}
 			}
 		}
 		nOffset += 20
+		log.Printf("%s finish %d", name, nOffset)
 	}
 
 	return nil

@@ -153,6 +153,7 @@ func CreateTask(url string, path string) *TTask {
 		log.Fatal(err)
 		return nil
 	}
+	log.Printf("Download file %s", fPath)
 
 	task.state = n
 	return task
@@ -215,7 +216,7 @@ func (task *TTask) Run() {
 		msg := <-thchannel //log.Print("Picec ", <-thchannel, " completed")
 		n, err := task.file.WriteAt(msg.data, msg.posStart)
 		if n != len(msg.data) || err != nil {
-			log.Fatal(n, "\t", err)
+			log.Print(n, "\t", err)
 			close(thchannel)
 			return
 		}
