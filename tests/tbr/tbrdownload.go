@@ -1,4 +1,4 @@
-package tbr
+package main
 
 import (
 	"fmt"
