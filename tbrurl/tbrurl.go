@@ -233,6 +233,94 @@ func GetItems(usrname string) (string, error) {
 	return result, nil
 }
 
+//TbrDownLoader run a downloader to get all items of a user
+func TbrDownLoader(name string) error {
+	var nOffset int64
+
+	posts, err := getPosts(name)
+	if err != nil {
+		return nil
+	}
+
+	for nOffset < posts {
+		download := func() error {
+			n, err := downloadPage(name, nOffset)
+			if err != nil {
+				return err
+			}
+			if n != 20 {
+				log.Printf("%s offset %d download %d videos", name, nOffset, n)
+			}
+			return nil
+		}
+		if download() != nil {
+			if download() != nil {
+				if err := download(); err != nil {
+					return err
+				}
+			}
+		}
+		nOffset += 20
+	}
+
+	return nil
+}
+
+func getPosts(name string) (int64, error) {
+	tGeter := newGeter(name)
+	resp, err := http.Get(tGeter.url())
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, err
+	}
+	return jsonparser.GetInt(body, "response", "blog", "total_posts")
+}
+
+func downloadPage(name string, offset int64) (int, error) {
+	var (
+		slaiceItems []string
+		nCount      int
+	)
+	tGeter := newGeter(name)
+	resp, err := http.Get(tGeter.pageurl(offset))
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, err
+	}
+	jsonparser.ArrayEach([]byte(body), func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+		target, _ := jsonparser.GetString(value, "body")
+		reg, _ := regexp.Compile(`tumblr_([0-9a-zA-Z]{17}).mp4`)
+		url := reg.FindString(target)
+		if url == "" {
+			target, _ = jsonparser.GetString(value, "video_url")
+			//reg, _ = regexp.Compile(`tumblr_([0-9a-zA-Z]{17}).mp4`)
+			url = reg.FindString(target)
+			if url == "" {
+				url = reg.FindString(string(value))
+			}
+		}
+		slaiceItems = append(slaiceItems, url)
+	}, "response", "posts")
+
+	for _, item := range slaiceItems {
+		newTask := urlget.CreateTask(itemPrefix+item, name)
+		if newTask == nil {
+			continue
+		}
+		newTask.Run()
+		nCount++
+	}
+	return nCount, nil
+}
+
 //private
 type tItem struct {
 	summary string
@@ -268,6 +356,7 @@ func newGeter(name string) tbrGet {
 	return geter
 }
 
+//https://api.tumblr.com/v2/blog/username/posts/video?api_key=takRkZUgF7x3h5Dh296ZDZt3jkaFdILFsBLYBLG9M1pwSArUOe
 func (geter *tbrGet) url() string {
 	var url string
 	url += geter.prefix
@@ -277,4 +366,9 @@ func (geter *tbrGet) url() string {
 	url += geter.media
 	url += geter.key
 	return url
+}
+
+//&offset=${(page-1)*20}
+func (geter *tbrGet) pageurl(offset int64) string {
+	return geter.url() + fmt.Sprintf("&offset=%d", offset)
 }

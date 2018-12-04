@@ -93,6 +93,71 @@ func NewTask(url string) *TTask {
 	return task
 }
 
+//CreateTask is TTask's constructor with path
+func CreateTask(url string, path string) *TTask {
+	task := new(TTask)
+	task.url = url
+	task.state = -1
+
+	len, err := probe(task.url)
+	if err != nil {
+		return nil
+	}
+	var n int64
+	if len != 0 {
+		for i, j := 0, 1; j == 1; i++ {
+			var pos int64
+			pos, j = func(v int64) (int64, int) {
+				if v+1 >= len {
+					return len - 1, 0
+				}
+				return v, 1
+			}(int64(i*gRangeSize + gRangeSize - 1))
+			task.pieces = append(task.pieces, tPiece{int64(i * gRangeSize), pos, 0})
+			n++
+		}
+		log.Print("File length: ", func() string {
+			if len < 1024 {
+				return fmt.Sprintf("%d Bytes", len)
+			} else if len < 1024*1024 {
+				return fmt.Sprintf("%d KBs", len/1024)
+			} else {
+				return fmt.Sprintf("%d Mbs", len/(1024*1024))
+			}
+		}())
+	}
+
+	isExist := func(p string) bool {
+		_, err := os.Stat(p)
+		if err != nil {
+			if os.IsExist(err) {
+				return true
+			}
+			return false
+		}
+		return true
+	}
+	if isExist(path) != true {
+		err := os.Mkdir(path, os.ModePerm)
+		if err != nil {
+			log.Print(err.Error())
+			return nil
+		}
+	}
+	fPath := path + "/" + task.url
+	if isExist(fPath) == true {
+		return nil
+	}
+	task.file, err = os.Create(parseFileName(fPath))
+	if err != nil {
+		log.Fatal(err)
+		return nil
+	}
+
+	task.state = n
+	return task
+}
+
 //Run start the task
 func (task *TTask) Run() {
 	if task.state == -1 {
