@@ -146,7 +146,15 @@ func CreateTask(url string, path string) *TTask {
 	}
 	fPath := path + "/" + parseFileName(task.url)
 	if isExist(fPath) == true {
-		return nil
+		fileInfo, err := os.Stat(fPath)
+		if err == nil && fileInfo.Size() == len {
+			return nil
+		}
+		err = os.Remove(fPath)
+		if err != nil {
+			log.Print(err.Error())
+			return nil
+		}
 	}
 	task.file, err = os.Create(fPath)
 	if err != nil {
