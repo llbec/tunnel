@@ -144,11 +144,11 @@ func CreateTask(url string, path string) *TTask {
 			return nil
 		}
 	}
-	fPath := path + "/" + task.url
+	fPath := path + "/" + parseFileName(task.url)
 	if isExist(fPath) == true {
 		return nil
 	}
-	task.file, err = os.Create(parseFileName(fPath))
+	task.file, err = os.Create(fPath)
 	if err != nil {
 		log.Fatal(err)
 		return nil
