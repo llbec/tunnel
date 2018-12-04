@@ -72,7 +72,15 @@ func NewTask(url string) *TTask {
 			task.pieces = append(task.pieces, tPiece{int64(i * gRangeSize), pos, 0})
 			n++
 		}
-		log.Printf("File length: %d", len)
+		log.Print("File length: ", func() string {
+			if len < 1024 {
+				return fmt.Sprintf("%d Bytes", len)
+			} else if len < 1024*1024 {
+				return fmt.Sprintf("%d KBs", len/1024)
+			} else {
+				return fmt.Sprintf("%d Mbs", len/(1024*1024))
+			}
+		}())
 	}
 
 	task.file, err = os.Create(parseFileName(task.url))
