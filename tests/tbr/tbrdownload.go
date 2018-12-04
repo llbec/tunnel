@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/tunnel/tbrurl"
 )
 
 func main() {
@@ -23,4 +25,9 @@ func main() {
 		return "video"
 	}()
 	log.Printf("%s\t%s download start", username, media)
+
+	err := tbrurl.TbrDownLoader(username)
+	if err != nil {
+		log.Printf("%s:%s", username, err.Error())
+	}
 }
