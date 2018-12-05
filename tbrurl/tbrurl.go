@@ -207,7 +207,7 @@ func TbrDownLoader(name string) error {
 			if download() != nil {
 				if err := download(); err != nil {
 					log.Printf("%s:%s", name, err.Error())
-					return err
+					continue
 				}
 			}
 		}

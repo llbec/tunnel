@@ -179,7 +179,7 @@ func (task *TTask) Run() {
 	if len(task.pieces) == 0 {
 		_, err := task.direcDownload()
 		if err != nil {
-			log.Fatal(err)
+			log.Print(err)
 		}
 		return
 	}
