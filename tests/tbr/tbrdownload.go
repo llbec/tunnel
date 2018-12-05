@@ -34,7 +34,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Print("Example: tbr username1 ...\n")
+		fmt.Print("Description:will download all the videos of the specify user of tumblr\nExample: tbr username1 ...\nNotice:winows set proxy by \"set http_proxy=127.0.0.1:1080\" and \"set https_proxy=127.0.0.1:1080\"\n")
 		return
 	}
 	log.Printf("Total %d tasks", len(os.Args)-1)
