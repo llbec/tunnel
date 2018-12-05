@@ -16,6 +16,8 @@ import (
 const gRangeSize = 1024
 const gThreadNum = 4
 
+var gFilterSize int64
+
 type tMessage struct {
 	posStart int64
 	data     []byte
@@ -196,6 +198,10 @@ func (task *TTask) Run() {
 	}*/
 
 	//multi threads
+	if gFilterSize > 0 && task.length > gFilterSize*1024*1024 {
+		log.Printf("<%s> length[%d] is too long", task.url, task.length)
+		return
+	}
 	thchannel := make(chan tMessage, gThreadNum)
 
 	downloadPiece := func() {
@@ -237,6 +243,11 @@ func (task *TTask) Run() {
 		go downloadPiece()
 	}
 	fmt.Printf(". done, file size is :%d\n", loadlen)
+}
+
+//SetFilterSize set the max file size
+func SetFilterSize(size int64) {
+	gFilterSize = size
 }
 
 //Relay get files and relay

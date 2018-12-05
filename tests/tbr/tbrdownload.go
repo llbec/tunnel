@@ -1,9 +1,12 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/tunnel/urlget"
 
 	"github.com/tunnel/tbrurl"
 )
@@ -34,9 +37,12 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Print("Description:will download all the videos of the specify user of tumblr\nExample: tbr username1 ...\nNotice:winows set proxy by \"set http_proxy=127.0.0.1:1080\" and \"set https_proxy=127.0.0.1:1080\"\n")
+		fmt.Print("Description:will download all the videos of the specify user of tumblr\nExample: tbr [-size=100] username1 ...\nNotice:winows set proxy by \"set http_proxy=127.0.0.1:1080\" and \"set https_proxy=127.0.0.1:1080\"\n")
 		return
 	}
+	maxSize := flag.Int64("size", 0, "set the max size of the file")
+	flag.Parse()
+	urlget.SetFilterSize(*maxSize)
 	log.Printf("Total %d tasks", len(os.Args)-1)
 	for i, name := range os.Args {
 		if 0 == i {
