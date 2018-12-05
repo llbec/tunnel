@@ -34,15 +34,15 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Print("Example: tbr username1 ...")
+		fmt.Print("Example: tbr username1 ...\n")
 		return
 	}
-	log.Printf("Total %d tasks", len(os.Args))
+	log.Printf("Total %d tasks", len(os.Args)-1)
 	for i, name := range os.Args {
 		if 0 == i {
 			continue
 		}
-		log.Printf("%s download start", name)
+		log.Printf("[%s] download start", name)
 		err := tbrurl.TbrDownLoader(name)
 		if err != nil {
 			log.Printf("%s:%s", name, err.Error())
