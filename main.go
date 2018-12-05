@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	var cmd int
+	var cmd string
 	var s string
 
 	if len(os.Args) < 2 {
@@ -17,21 +17,18 @@ func main() {
 		return
 	}
 
-	fmt.Println("1. get file\n2. download one\nEnter the number:")
-	fmt.Scanln(&cmd)
+	cmd = os.Args[1]
 
-	if cmd == 1 {
-		s, _ = tbrurl.GetFile()
-	} else if cmd == 2 {
-		s, _ = tbrurl.Get()
+	if len(os.Args) == 3 && os.Args[2] == "json" {
+		s, _ = tbrurl.GetFile(cmd)
+	} else {
+		s, _ = tbrurl.Get(cmd)
 		if s == "" {
 			fmt.Print("URL is NULL\n")
 			return
 		}
 		newTask := urlget.NewTask(s)
 		newTask.Run()
-	} else {
-		return
 	}
 	fmt.Print("Result is:\n", s, "\n")
 }

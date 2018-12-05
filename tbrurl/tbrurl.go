@@ -14,16 +14,12 @@ import (
 )
 
 //Get public func, return target url
-func Get() (string, error) {
+func Get(name string) (string, error) {
 	var (
-		name        string
 		slaiceItems []tItem
 		nOffset     int64
 		nIndex      int
 	)
-
-	fmt.Println("Enter the usrname:")
-	fmt.Scanln(&name)
 
 	posts, err := getPosts(name)
 	if err != nil {
@@ -77,12 +73,7 @@ func Get() (string, error) {
 }
 
 //GetFile get url file
-func GetFile() (string, error) {
-	var name string
-
-	fmt.Println("Enter the usrname:")
-	fmt.Scanln(&name)
-
+func GetFile(name string) (string, error) {
 	tGeter = newGeter(name)
 	resp, err := http.Get(tGeter.url())
 	if err != nil {
