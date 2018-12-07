@@ -312,7 +312,7 @@ func downloadPage(name string, offset int64) (int, error) {
 	}, "response", "posts")
 
 	for n, item := range slaiceItems {
-		log.Printf("Start Task %d", offset*20+int64(n))
+		log.Printf("Start Task %d", offset+int64(n))
 		newTask := urlget.CreateTask(itemPrefix+item, name)
 		if newTask == nil {
 			continue
