@@ -19,8 +19,8 @@ const gThreadNum = 4
 var gFilterSize int64
 
 type tMessage struct {
-	posStart int64
-	data     []byte
+	pos  int
+	data []byte
 }
 
 type tPiece struct {
@@ -231,15 +231,20 @@ func (task *TTask) Run() {
 	}
 	for isDone() == false {
 		msg := <-thchannel //log.Print("Picec ", <-thchannel, " completed")
-		n, err := task.file.WriteAt(msg.data, msg.posStart)
-		if n != len(msg.data) || err != nil {
-			log.Print(n, "\t", err)
-			close(thchannel)
-			return
+		if int64(len(msg.data)) == task.pieces[msg.pos].posEnd+1-task.pieces[msg.pos].posStart {
+			n, err := task.file.WriteAt(msg.data, task.pieces[msg.pos].posStart)
+			if n != len(msg.data) || err != nil { //should't get in
+				log.Print(n, "\t", err)
+				close(thchannel)
+				return
+			}
+			//log.Printf("Write from %d to %d", msg.posStart, msg.posStart+int64(n)-1)
+			loadlen += int64(n)
+			fmt.Printf("\r%d percent", loadlen*100/task.length)
+		} else {
+			task.pieces[msg.pos].status = 0
 		}
-		//log.Printf("Write from %d to %d", msg.posStart, msg.posStart+int64(n)-1)
-		loadlen += int64(n)
-		fmt.Printf("\r%d percent", loadlen*100/task.length)
+
 		go downloadPiece()
 	}
 	fmt.Printf(". done, file size is :%d\n", loadlen)
@@ -313,7 +318,7 @@ func (task *TTask) partialDownload(pos int, ch chan tMessage) {
 	}
 
 	task.pieces[pos].status = 1
-	ch <- tMessage{task.pieces[pos].posStart, data}
+	ch <- tMessage{pos, data}
 }
 
 // probe makes am HTTP request to the site and return site infomation.
