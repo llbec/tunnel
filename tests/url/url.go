@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 )
 
 var (
@@ -22,7 +23,7 @@ func main() {
 	if len(os.Args) < 2 {
 		return
 	}
-	resp, err := http.Get(os.Args[1])
+	resp, err := http.Get(strings.Replace(os.Args[1], "https://", "http://", 1))
 	if err != nil {
 		fmt.Print(err.Error())
 		return
