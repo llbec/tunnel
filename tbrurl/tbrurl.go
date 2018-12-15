@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/buger/jsonparser"
-	"github.com/tunnel/urlget"
+	"github.com/tunnel/urldownload"
 )
 
 //Get public func, return target url
@@ -129,7 +129,7 @@ func DownLoadHandle(w http.ResponseWriter, req *http.Request) {
 	if req.Method == "GET" {
 		if len(args) > 2 {
 			url := itemPrefix + args[2]
-			newTask := urlget.NewTask(url)
+			newTask := urldownload.NewTask(url)
 			newTask.Relay(w)
 			return
 		}
@@ -153,7 +153,7 @@ func DownLoadHandle(w http.ResponseWriter, req *http.Request) {
 		if index < 0 || index > int64(len(items)) {
 			fmt.Fprintf(w, "[ERROR] Invalid index")
 		}
-		newTask := urlget.NewTask(items[index])
+		newTask := urldownload.NewTask(items[index])
 		newTask.Relay(w)
 		return
 	}
@@ -313,7 +313,7 @@ func downloadPage(name string, offset int64) (int, error) {
 
 	for n, item := range slaiceItems {
 		log.Printf("Start Task %d", offset+int64(n))
-		newTask := urlget.CreateTask(itemPrefix+item, name)
+		newTask := urldownload.CreateTask(itemPrefix+item, name)
 		if newTask == nil {
 			continue
 		}

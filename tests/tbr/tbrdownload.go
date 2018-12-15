@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/tunnel/urlget"
+	"github.com/tunnel/urldownload"
 
 	"github.com/tunnel/tbrurl"
 )
@@ -42,7 +42,7 @@ func main() {
 	}
 	maxSize := flag.Int64("size", 0, "set the max size of the file")
 	flag.Parse()
-	urlget.SetFilterSize(*maxSize)
+	urldownload.SetFilterSize(*maxSize)
 	log.Printf("Total %d blogs", len(os.Args)-1)
 	for i, name := range os.Args {
 		if 0 == i {

@@ -1,4 +1,4 @@
-package urlget
+package urldownload
 
 import (
 	"errors"

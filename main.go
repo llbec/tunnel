@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/tunnel/tbrurl"
-	"github.com/tunnel/urlget"
+	"github.com/tunnel/urldownload"
 )
 
 func main() {
@@ -27,7 +27,7 @@ func main() {
 			fmt.Print("URL is NULL\n")
 			return
 		}
-		newTask := urlget.NewTask(s)
+		newTask := urldownload.NewTask(s)
 		newTask.Run()
 	}
 	fmt.Print("Result is:\n", s, "\n")
