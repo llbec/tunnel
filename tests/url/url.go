@@ -29,7 +29,7 @@ func main() {
 			return prefix + url
 		}
 		return url
-	}(flag.Args()[1]))
+	}(flag.Args()[0]))
 	if err != nil {
 		fmt.Print(err.Error())
 		return
