@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 )
 
@@ -20,7 +19,7 @@ func init() {
 
 func main() {
 	flag.Parse()
-	if len(os.Args) < 2 {
+	if len(flag.Args()) < 1 {
 		return
 	}
 	resp, err := http.Get(func(url string) string {
@@ -30,7 +29,7 @@ func main() {
 			return prefix + url
 		}
 		return url
-	}(os.Args[3]))
+	}(flag.Args()[1]))
 	if err != nil {
 		fmt.Print(err.Error())
 		return
