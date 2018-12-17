@@ -23,7 +23,14 @@ func main() {
 	if len(os.Args) < 2 {
 		return
 	}
-	resp, err := http.Get(strings.Replace(os.Args[1], "https://", "http://", 1))
+	resp, err := http.Get(func(url string) string {
+		prefix := "http://"
+		url = strings.Replace(url, "https://", prefix, 1)
+		if len(url) < len(prefix) || url[0:len(prefix)] != prefix {
+			return prefix + url
+		}
+		return url
+	}(os.Args[3]))
 	if err != nil {
 		fmt.Print(err.Error())
 		return
@@ -33,6 +40,12 @@ func main() {
 	if err != nil {
 		fmt.Print(err.Error())
 		return
+	}
+	if filename != "" {
+		if ioutil.WriteFile(filename+".html", body, 0644) == nil {
+			fmt.Printf("Save to file %s.html success\n", filename)
+			return
+		}
 	}
 	fmt.Print(string(body))
 	return
