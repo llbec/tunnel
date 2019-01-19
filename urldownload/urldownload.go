@@ -14,8 +14,9 @@ import (
 )
 
 const gRangeSize = 1024
-const gThreadNum = 4
 
+//const gThreadNum = 4
+var gThreadNum int
 var gFilterSize int64
 
 type tMessage struct {
@@ -253,6 +254,11 @@ func (task *TTask) Run() {
 //SetFilterSize set the max file size
 func SetFilterSize(size int64) {
 	gFilterSize = size
+}
+
+//SetThreadNum set the max thread number
+func SetThreadNum(n int) {
+	gThreadNum = n
 }
 
 //Relay get files and relay

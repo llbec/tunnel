@@ -41,8 +41,10 @@ func main() {
 		return
 	}
 	maxSize := flag.Int64("size", 0, "set the max size of the file")
+	maxThread := flag.Int("thread", 4, "set the max number of the thread")
 	flag.Parse()
 	urldownload.SetFilterSize(*maxSize)
+	urldownload.SetThreadNum(*maxThread)
 	log.Printf("Total %d blogs", len(os.Args)-1)
 	for i, name := range os.Args {
 		if 0 == i {
