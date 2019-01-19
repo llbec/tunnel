@@ -13,3 +13,6 @@
 tunnel
 tests/tbr/tbr
 *.mp4
+
+# MacOS
+.DS_Store
