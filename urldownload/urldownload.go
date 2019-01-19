@@ -144,7 +144,7 @@ func CreateTask(url string, path string) *TTask {
 	if isExist(path) != true {
 		err := os.Mkdir(path, os.ModePerm)
 		if err != nil {
-			log.Print(err.Error())
+			log.Printf("Mkdir failed! %s", err.Error())
 			return nil
 		}
 	}
@@ -156,13 +156,13 @@ func CreateTask(url string, path string) *TTask {
 		}
 		err = os.Remove(fPath)
 		if err != nil {
-			log.Print(err.Error())
+			log.Printf("Remove file failed! %s", err.Error())
 			return nil
 		}
 	}
 	task.file, err = os.Create(fPath)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Create file failed! %s", err.Error())
 		return nil
 	}
 	log.Printf("Download file %s", fPath)
@@ -359,7 +359,7 @@ func probe(url string) (length int64, err error) {
 		// set length to N/A or unknown
 		length = 0
 	default:
-		log.Fatal("Got unexpected status code", resp.StatusCode)
+		log.Println("Got unexpected status code", resp.StatusCode)
 		err = errors.New("Unexpected error response when access site: " + url)
 	}
 
